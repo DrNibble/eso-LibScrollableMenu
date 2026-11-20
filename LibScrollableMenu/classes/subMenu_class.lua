@@ -125,14 +125,48 @@ function submenuClass:UpdateOptions(options, onInit)
 	self:AddCustomEntryTemplates(self:GetOptions())
 end
 
+function submenuClass:IsFilterEnabled()
+	return self.filterSubmenu == true
+end
+
+function submenuClass:SetLocalFilter(filterBox)
+	if not self.filterSubmenu or not self:IsDropdownVisible() then return end
+	local text = zo_strlower(filterBox:GetText():match("^%s*(.-)%s*$"))
+	if self.filterString == text then return end
+	self.filterString = text
+	if self.m_submenu and self.m_submenu:IsDropdownVisible() then self.m_submenu:HideDropdown() end
+	ZO_Tooltips_HideTextTooltip()
+	local minWidth = self.containerMinWidth
+	self.containerMinWidth = self.m_dropdownObject.control:GetWidth()
+	self:Show()
+	self.containerMinWidth = minWidth
+end
+
 function submenuClass:AddMenuItems(parentControl)
 --	d( debugPrefix .. 'submenuClass:AddMenuItems')
 
 	if libDebug.doDebug then dlog(libDebug.LSM_LOGTYPE_VERBOSE, 142, tos(getControlName(parentControl))) end
 	self.openingControl = parentControl
+	local data = getControlData(parentControl).additionalData
+	self.filterSubmenu = data ~= nil and data.enableSubmenuFilter == true
+	self.filterString = ""
+	local dropdown = self.m_dropdownObject.control
+	if self.filterSubmenu and not dropdown.header then
+		ApplyTemplateToControl(dropdown, "LibScrollableMenu_Dropdown_Template_WithHeader")
+	end
+	if dropdown.header then
+		local filterBox = dropdown.filterBox
+		filterBox:LoseFocus()
+		if filterBox:GetText() ~= "" then filterBox:SetText("") end
+		-- Do not inherit the parent header title, sorting controls or custom widgets.
+		local options = self.options
+		self.options = {}
+		libUtil.refreshDropdownHeader(self, dropdown.header, false)
+		self.options = options
+	end
 	self:RefreshSortedItems(parentControl)
-	self:UpdateWidth()
-	self:UpdateHeight()
+	self:UpdateWidth(dropdown)
+	self:UpdateHeight(dropdown)
 	--self:Show() --Is called from self:UpdateHeight() already so would be called double here!
 	self.m_dropdownObject:AnchorToControl(parentControl)
 end

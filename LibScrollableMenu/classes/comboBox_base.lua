@@ -1240,6 +1240,12 @@ function comboBox_base:HiddenForReasons(button, isMouseOverOwningDropdown)
 	g_contextMenu = getContextMenuReference()
 	local owningWindow, mocCtrl, comboBox, mocEntry = getMouseOver_HiddenFor_Info()
 	if libDebug.doDebug then dlog(libDebug.LSM_LOGTYPE_VERBOSE, 96, tos(button)) end
+	local hoveredDropdown = owningWindow and owningWindow.m_dropdownObject
+	if hoveredDropdown and hoveredDropdown.m_comboBox == self and hoveredDropdown.owner
+		and hoveredDropdown.owner.filterSubmenu and hoveredDropdown.control.header
+		and MouseIsOver(hoveredDropdown.control.header) then
+		return false
+	end
 
 	--Check if checkbox, radiobutton, slider, editBox
 	local mocCtrlOrig = mocCtrl
@@ -1589,6 +1595,7 @@ end
 -- We hide the tooltip here so it is hidden if the dropdown is hidden OnGlobalMouseUp
 function comboBox_base:HideDropdown()
 --d(debugPrefix .. "comboBox_base:HideDropdown")
+	if self.embeddedList then return false end
 	if libDebug.doDebug then dlog(libDebug.LSM_LOGTYPE_VERBOSE, 97) end
 	-- Recursive through all open submenus and close them starting from last.
 

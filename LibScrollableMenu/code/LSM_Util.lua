@@ -1043,7 +1043,7 @@ function libUtil.isAnyLSMDropdownVisible(contextMenuToo)
 --d(debugPrefix .. "libUtil.isAnyLSMDropdownVisible-contextMenuToo: " ..tos(contextMenuToo))
 	getControlName = getControlName or libUtil.getControlName
 	for _, lsmRef in ipairs(lib._objects) do
-		if lsmRef ~= nil and lsmRef:IsDropdownVisible() then
+		if lsmRef ~= nil and not lsmRef.embeddedList and lsmRef:IsDropdownVisible() then
 			if not contextMenuToo or (contextMenuToo and lsmRef.isContextMenu) then
 --d(">> YES: " ..tos(getControlName(lsmRef.m_container)))
 				return true

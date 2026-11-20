@@ -1,6 +1,8 @@
--v- ---------------Development - 2026-11-20----------------------------------------------------------------------- -v--
+-v- ---------------LSM v2.49 (development) - 2026-11-20----------------------------------------------------------- -v--
 [Added]
 --Opt-in manual ordering of standard rows in root dropdowns and context menus, with drag-and-drop, move arrows and an onOrderChanged callback.
+--Opt-in independent native filtering in a submenu via additionalData.enableSubmenuFilter.
+--CreateEmbeddedList lets a window host persistent LSM lists, including filtering and manual ordering.
 --Validated with Lua 5.1 simulations; not tested in ESO.
 
 

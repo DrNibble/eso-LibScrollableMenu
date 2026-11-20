@@ -496,6 +496,12 @@ function PreventCustomScrollableContextMenuHide()
 function PreventCustomScrollableContextMenuEntryClickHide(clickCount)
 ```
 
+### Local submenu search and persistent lists (2.49)
+
+Set `additionalData.enableSubmenuFilter = true` on a submenu entry to give it its own native search and reset button. Its query is cleared when the submenu is reopened, is not saved to history, and does not affect the root or sibling submenus. For a context menu, use `AddCustomScrollableSubMenuEntry(title, entries, nil, { enableSubmenuFilter = true })`.
+
+`LibScrollableMenu.CreateEmbeddedList(host, options)` creates a persistent list anchored to a named keyboard-UI control. Use `list:SetItems(entries)` with ordinary LSM entry data in display order, then call `list:Show()` when the containing window is shown. Clicking outside or clicking a row does not dismiss it. `list:Hide()` or hiding the host clears the search and stops any drag. Use `enableFilter` for the native search or `enableManualOrder` and `onOrderChanged` for reordering.
+
 ### Callbacks fired by the library where you can register via LibScrollableMenu:RegisterForCallback(callbackName, func) to
 ```
 -callbackName-          -functionParameters-   -Description-

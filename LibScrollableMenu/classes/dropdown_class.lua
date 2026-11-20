@@ -862,7 +862,7 @@ local handlerFunctions  = {
 		[entryTypeConstants.LSM_ENTRY_TYPE_NORMAL] = function(selfVar, control, data, button, upInside, ctrl, alt, shift)
 --d(debugPrefix .. 'onMouseUp [entryTypeConstants.LSM_ENTRY_TYPE_NORMAL]')
 			onMouseUp(control, data, no_submenu)
-			return true
+			return not selfVar.owner.embeddedList
 		end,
 		[entryTypeConstants.LSM_ENTRY_TYPE_HEADER] = function(selfVar, control, data, button, upInside, ctrl, alt, shift)
 			return false
@@ -2073,15 +2073,16 @@ function dropdownClass:Show(comboBox, itemTable, minWidth, maxWidth, maxHeight, 
 	self.owner = comboBox
 
 	local comboBoxObject = self.m_comboBox
+	local filterOwner = comboBox.filterSubmenu and comboBox or comboBoxObject
 
 	-- externally defined
 	ignoreSubmenu, filterString, filterFunc, filterStringIsBoolean, filterStringIsNumber = nil, nil, nil, nil, nil
 	lastEntryVisible = false
 	--options.enableFilter == true?
 	if self:IsFilterEnabled() then
-		ignoreSubmenu, filterString = comboBoxObject.filterString:match('(/?)(.*)') -- starts with / and followed by .* to include special characters
-		filterFunc = comboBoxObject:GetFilterFunction()
-	else
+		ignoreSubmenu, filterString = (filterOwner.filterString or ""):match('(/?)(.*)') -- starts with / and followed by .* to include special characters
+		filterFunc = filterOwner:GetFilterFunction()
+	elseif not comboBox.embeddedList then
 		self:ResetFilters(comboBoxObject.m_dropdown)
 	end
 	filterString = filterString or ''
@@ -2095,7 +2096,7 @@ function dropdownClass:Show(comboBox, itemTable, minWidth, maxWidth, maxHeight, 
 	--Any text entered?
 	local textSearchEnabled = filterString ~= ''
 	--Text filter should show non-matching submenu entries? "/" prefix was used in text filter editBox
-	if textSearchEnabled and comboBox.isSubmenu then
+	if textSearchEnabled and comboBox.isSubmenu and not comboBox.filterSubmenu then
 		if ignoreSubmenu == true then
 			textSearchEnabled = false
 		end
@@ -2163,7 +2164,7 @@ function dropdownClass:Show(comboBox, itemTable, minWidth, maxWidth, maxHeight, 
 	-- Add padding one more time to account for potential pixel rounding issues that could cause the scroll bar to appear unnecessarily.
 	allItemsHeight = allItemsHeight + (ZO_SCROLLABLE_COMBO_BOX_LIST_PADDING_Y * 2) + 1
 
-	if allItemsHeight < desiredHeight then
+	if allItemsHeight < desiredHeight and not comboBox.embeddedList then
 		desiredHeight = allItemsHeight
 	end
 	--	ZO_Scroll_SetUseScrollbar(self, false)
@@ -2311,7 +2312,12 @@ function dropdownClass:XMLHandler(selfVar, handlerName)
 	if selfVar == nil or handlerName == nil then return end
 
 	if handlerName == "OnEffectivelyHidden" then
-		self:HideDropdown()
+		if self.owner and self.owner.embeddedList then
+			self.owner:SetVisible(false)
+			lib.ManualOrder.CancelDrag(self)
+		else
+			self:HideDropdown()
+		end
 	elseif handlerName == "OnMouseEnter" then
 		self:OnMouseExitTimeout(selfVar)
 
@@ -2377,6 +2383,15 @@ function dropdownClass:WasTextSearchContextMenuEntryClicked(mocCtrl)
 end
 
 function dropdownClass:SetFilterString(filterBox)
+	if self.owner and self.owner.filterSubmenu then
+		self.owner:SetLocalFilter(filterBox)
+		return
+	elseif self.owner and self.owner.isSubmenu then
+		return
+	elseif self.owner and self.owner.embeddedList then
+		if self.owner:IsDropdownVisible() then self.owner:SetFilterString(filterBox) end
+		return
+	end
  --d("dropdownClass:SetFilterString")
 	if self.m_comboBox then
 		-- It probably does not need this but, added it to prevent lagging from fast typing.
@@ -2396,6 +2411,7 @@ function dropdownClass:SetFilterString(filterBox)
 end
 
 function dropdownClass:ShowFilterEditBoxHistory(filterBox)
+	if self.owner and (self.owner.filterSubmenu or self.owner.embeddedList) then return end
 	lib.preventerVars.suppressNextOnEntryMouseUpDisableCounter = nil
 
 	local selfVar = self
@@ -2471,6 +2487,7 @@ function dropdownClass:ResetFilters(owningWindow)
 end
 
 function dropdownClass:IsFilterEnabled()
+	if self.owner and self.owner.filterSubmenu then return true end
 --d(debugPrefix .. "dropdownClass:IsFilterEnabled")
 	if self.m_comboBox then
 		return self.m_comboBox:IsFilterEnabled()
@@ -2590,4 +2607,3 @@ function dropdownClass:ToggleHeader(toggleButtonControl)
 	--> which then calls comboBoxClass:UpdateDropdownHeader with 2nd param "toggleFuncUsed = true"
 	ZO_CheckButton_OnClicked(toggleButtonControl)
 end
-

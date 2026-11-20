@@ -229,6 +229,51 @@ function AddCustomScrollableComboBoxDropdownMenu(parent, comboBoxContainer, opti
 	return comboBox.m_dropdownObject
 end
 
+-- A persistent root list, anchored to a named host and managed by its window.
+-- Unlike a popup, it never registers the global outside-click handler.
+function lib.CreateEmbeddedList(host, options)
+	local container = WINDOW_MANAGER:CreateControlFromVirtual("$(parent)ComboBox", host, "ZO_ComboBox")
+	container:SetWidth(host:GetWidth())
+	container:SetHidden(true)
+	local dropdown = AddCustomScrollableComboBoxDropdownMenu(host, container, options)
+	local comboBox = ZO_ComboBox_ObjectFromContainer(container)
+	comboBox.embeddedList = true
+	dropdown.control:SetDrawTier(host:GetOwningWindow():GetDrawTier())
+	dropdown.control:ClearAnchors()
+	dropdown.control:SetAnchor(TOPLEFT, host, TOPLEFT)
+
+	local list = {}
+	function list:SetItems(entries)
+		ZO_ClearNumericallyIndexedTable(comboBox.m_sortedItems)
+		ZO_ClearNumericallyIndexedTable(comboBox.m_unsortedItems)
+		for _, entry in ipairs(entries) do
+			comboBox:AddItem(entry, ZO_COMBOBOX_SUPPRESS_UPDATE)
+		end
+		if comboBox:IsDropdownVisible() then comboBox:Show() end
+	end
+
+	function list:Show()
+		comboBox:UpdateDropdownHeader()
+		comboBox:SetVisible(true)
+		comboBox:Show()
+		dropdown:SetHidden(false)
+	end
+
+	function list:Hide()
+		comboBox:SetVisible(false)
+		dropdown:SetHidden(true)
+		if dropdown.control.filterBox then
+			dropdown.control.filterBox:LoseFocus()
+			dropdown.control.filterBox:SetText("")
+		end
+		comboBox.filterString = ""
+		lib.ManualOrder.CancelDrag(dropdown)
+	end
+
+	host:SetHandler("OnEffectivelyHidden", function() list:Hide() end, "LibScrollableMenu_EmbeddedList")
+	return list
+end
+
 
 --~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 --[API - Custom scrollable context menu at any control]
@@ -412,6 +457,7 @@ end
 local addCustomScrollableMenuEntry = AddCustomScrollableMenuEntry
 
 --Adds an entry having a submenu (or maybe nested submenues) in the entries table/entries function whch returns a table
+--Set additionalData.enableSubmenuFilter = true to give this submenu its own native search.
 --> See examples for the table "entries" values above AddCustomScrollableMenuEntry
 --Existing context menu entries will be kept (until ClearCustomScrollableMenu will be called)
 --callback function signature:  comboBox, itemName, item, selectionChanged, oldItem
