@@ -632,6 +632,7 @@ end
 ]]
 
 function comboBoxClass:IsSortEnabled() --#2026_10
+	if lib.ManualOrder.IsEnabled(self) then return false end
 	local options = self:GetOptions()
 	local enableFilter = (options and getValueOrCallback(options.enableFilter, options)) or false
 	local enableSort = (enableFilter == true and (options and getValueOrCallback(options.enableSort, options))) or false

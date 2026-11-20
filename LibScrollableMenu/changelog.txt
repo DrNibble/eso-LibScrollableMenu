@@ -1,3 +1,9 @@
+-v- ---------------Development - 2026-11-20----------------------------------------------------------------------- -v--
+[Added]
+--Opt-in manual ordering of standard rows in root dropdowns and context menus, with drag-and-drop, move arrows and an onOrderChanged callback.
+--Validated with Lua 5.1 simulations; not tested in ESO.
+
+
 -v- ---------------LSM v2.48 - 2026-11-01--------------------------------------------------------------------------- -v--
 [Fixed]
 --#2026_23 (Automatic)refresh opens new LSM dropdown w/o closing old one below (resulting in overlaying dropdowns shown)

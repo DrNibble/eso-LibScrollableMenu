@@ -2012,6 +2012,11 @@ function comboBox_base:UpdateItems(sortUpdate)
 --d("[LSM]comboBox_base:UpdateItems() - sortUpdate: " ..tos(sortUpdate) .. ", sortOrder: " .. tos(self.m_sortOrder))
 	--zo_comboBox_base_updateItems(self) --#2026_09 260525 trying to support custom sortFunction and order from options of the LSM comboBox
 
+	if lib.ManualOrder.IsEnabled(self) then
+		if self:IsDropdownVisible() then self:ShowDropdown() end
+		return
+	end
+
 	--Enable the sort of the combobox now, as we are coming from "sort up/down" buttons at the (collapsible) filterHeader
 	if sortUpdate == true and not self.m_sortsItems then --#2026_10
 		self:SetSortsItems(true)
@@ -2745,6 +2750,7 @@ d(">enabled: " .. tos(data.enabled))
 		self:SetupEntryLabelBase(control, data, list)
 
 		if realEntryType == entryTypeConstants.LSM_ENTRY_TYPE_NORMAL then
+			lib.ManualOrder.SetupRow(self, control)
 			--Update the control.m_highlightTemplate
 			self:UpdateHighlightTemplate(control, data, nil, nil)
 		end

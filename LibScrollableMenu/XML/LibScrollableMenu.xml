@@ -220,6 +220,60 @@
 			</Controls>
 		</Control>
 
+		<!-- Created lazily on stock normal rows when manual ordering is enabled. -->
+		<Control name="LibScrollableMenu_ManualOrderControls" hidden="true" virtual="true">
+			<Dimensions x="66" y="20" />
+			<Anchor point="RIGHT" offsetX="-2" />
+			<Controls>
+				<Control name="$(parent)Grip" mouseEnabled="true">
+					<Dimensions x="22" y="20" />
+					<Anchor point="LEFT" />
+					<OnMouseEnter>
+						LibScrollableMenu.ManualOrder.ShowTooltip(self, SI_LSM_MANUAL_ORDER_DRAG)
+					</OnMouseEnter>
+					<OnMouseExit>
+						ZO_Tooltips_HideTextTooltip()
+					</OnMouseExit>
+					<OnDragStart>
+						LibScrollableMenu.ManualOrder.StartDrag(self, button)
+					</OnDragStart>
+					<Controls>
+						<Label font="ZoFontWinH4" text="=">
+							<Anchor point="CENTER" />
+						</Label>
+					</Controls>
+				</Control>
+				<Button name="$(parent)Up" inherits="ZO_ButtonBehaviorClickSound" mouseEnabled="true">
+					<Dimensions x="18" y="18" />
+					<Anchor point="CENTER" />
+					<Textures normal="esoui/art/buttons/scrollbox_uparrow_up.dds" pressed="esoui/art/buttons/scrollbox_uparrow_down.dds" mouseOver="esoui/art/buttons/scrollbox_uparrow_over.dds" />
+					<OnMouseEnter>
+						LibScrollableMenu.ManualOrder.ShowTooltip(self, SI_LSM_MANUAL_ORDER_UP)
+					</OnMouseEnter>
+					<OnMouseExit>
+						ZO_Tooltips_HideTextTooltip()
+					</OnMouseExit>
+					<OnClicked>
+						LibScrollableMenu.ManualOrder.MoveWithButton(self, -1)
+					</OnClicked>
+				</Button>
+				<Button name="$(parent)Down" inherits="ZO_ButtonBehaviorClickSound" mouseEnabled="true">
+					<Dimensions x="18" y="18" />
+					<Anchor point="RIGHT" offsetX="-2" />
+					<Textures normal="esoui/art/buttons/scrollbox_downarrow_up.dds" pressed="esoui/art/buttons/scrollbox_downarrow_down.dds" mouseOver="esoui/art/buttons/scrollbox_downarrow_over.dds" />
+					<OnMouseEnter>
+						LibScrollableMenu.ManualOrder.ShowTooltip(self, SI_LSM_MANUAL_ORDER_DOWN)
+					</OnMouseEnter>
+					<OnMouseExit>
+						ZO_Tooltips_HideTextTooltip()
+					</OnMouseExit>
+					<OnClicked>
+						LibScrollableMenu.ManualOrder.MoveWithButton(self, 1)
+					</OnClicked>
+				</Button>
+			</Controls>
+		</Control>
+
 		<!-- Button without clickSound="Click" in XML-->
 		<Button name="LibScrollableMenu_DefaultTextButton" font="ZoFontGame" verticalAlignment="CENTER" virtual="true">
             <Dimensions x="128" y="26" />

@@ -965,6 +965,7 @@ local function addEntryToScrollList(self, item, dataList, index, allItemsHeight,
 		entryHeight = entryHeight + spacing
 	end
 
+	widthPadding = widthPadding + lib.ManualOrder.GetWidth(self.owner, item)
 	allItemsHeight = allItemsHeight + entryHeight
 
 	local entry = createScrollableComboBoxEntry(self, item, index, entryType)
@@ -1869,6 +1870,7 @@ end
 -->And in LSM code from XML virtual template LibScrollableMenu_ComboBoxEntry_Behavior -> "OnMouseUp" -> dropdownClass:OnEntryMouseUp
 --> #2025_46 This method is not called as the control is mouseEnabled false!
 function dropdownClass:OnEntryMouseUp(control, button, upInside, ignoreHandler, ctrl, alt, shift, lsmEntryType)
+	if button == MOUSE_BUTTON_INDEX_LEFT and lib.ManualOrder.IsDragging() then return end
 	if libDebug.doDebug then dlog(libDebug.LSM_LOGTYPE_VERBOSE, 71, tos(getControlName(control)), tos(button), tos(upInside)) end
 --d(debugPrefix .."dropdownClass:OnEntryMouseUp-"  .. tos(getControlName(control)) ..", button: " .. tos(button) .. ", upInside: " .. tos(upInside) .. ", lsmEntryType: " .. tos(lsmEntryType))
 	--20240816 Suppress the next global mouseup event raised from a comboBox's dropdown (e.g. if a submenu entry outside of a context menu was clicked
@@ -2042,6 +2044,7 @@ end
 
 --Will be executed from XML handlers -> formattedEventName will be build via method GetFormattedNarrateEvent
 function dropdownClass:OnHide(formattedEventName)
+	lib.ManualOrder.CancelDrag(self)
 	if libDebug.doDebug then dlog(libDebug.LSM_LOGTYPE_VERBOSE, 79) end
 
 	--#2025_45 Call special contextMenu OnClose callback for registered contextMenus (done at ShowCustomScrollableMenu, last parameter specialCallbackData.addonName and specialCallbackData.OnCloseCallback)

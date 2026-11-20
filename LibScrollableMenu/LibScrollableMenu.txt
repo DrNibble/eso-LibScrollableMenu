@@ -25,6 +25,7 @@ debug/LSM_debug.lua
 
 ; Utility functions
 code/LSM_Util.lua
+code/LSM_ManualOrder.lua
 
 ; Classes for special entry types
 classes/colorPicker_class.lua

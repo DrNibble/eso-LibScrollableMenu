@@ -94,6 +94,40 @@ tableWithEntries [#tableWithEntries +1] = {
 }
 ```
 
+### Manual ordering of root menu entries
+
+This is inspired by [LibAddonMenuOrderListBox](https://github.com/DrNibble/LibAddonMenuOrderListBox); there is no runtime dependency on it. Set `enableManualOrder = true` in the options for `AddCustomScrollableComboBoxDropdownMenu` or `ShowCustomScrollableMenu`. The root menu keeps its insertion order instead of applying automatic sorting. On a standard enabled row, drag the `=` grip to another row or click an arrow. Shift-click an arrow to move to the start or end of its group. During a drag, hovering near the top or bottom of the list scrolls it.
+
+Only enabled, normal rows using the stock template can move. Headers, separators, disabled rows, custom row templates and other entry types stay fixed and separate groups. Reordering is disabled while a search is active. Submenus and menus without the option are unchanged. This feature is for the keyboard/mouse UI.
+
+```lua
+local options = {
+    enableManualOrder = true,
+    onOrderChanged = function(comboBox, orderedItems, movedItem, fromIndex, toIndex)
+        local order = {}
+        for i, item in ipairs(orderedItems) do
+            order[i] = item.name -- Use your own stable entry ID if names can repeat.
+        end
+        mySavedVariables.menuOrder = order
+    end,
+}
+
+AddCustomScrollableComboBoxDropdownMenu(parentControl, comboBoxControl, options)
+local comboBox = ZO_ComboBox_ObjectFromContainer(comboBoxControl)
+-- Build menuEntries in the saved order before adding them.
+for _, item in ipairs(menuEntries) do
+    comboBox:AddItem(item, ZO_COMBOBOX_SUPPRESS_UPDATE)
+end
+comboBox:UpdateItems()
+
+-- For a context menu: build the entries in the same order, then call
+-- ShowCustomScrollableMenu(anchorControl, options).
+```
+
+The callback runs once per successful move, not on ordinary selection. It receives a shallow copy of the whole menu array; its entries are the original item tables. Indices count every row, including fixed ones. The library preserves the order on reopening the same dropdown. If the addon clears and rebuilds the menu or the UI is reloaded, the addon must restore its saved order.
+
+Run `lua5.1 tests/manual_order_test.lua` from the repository root for the off-game tests. To check in ESO, open a dropdown and a context menu with the option enabled and verify a move by arrow, Shift-click, a drag with edge scrolling, a drop outside the menu, and that a regular row click still selects normally. Also verify that entering a search term hides the controls and clearing it restores them.
+
 From esoui.com description:
 Add a scrolhelper (dropdown scrollable) to a ZO_ComboBox:
 API syntax:

@@ -117,6 +117,8 @@ end
 --		boolean sortEntries:optional			Boolean or function returning boolean if items in the main-/submenu should be sorted alphabetically. !!!Attention: Default is TRUE (sorting is enabled)!!!
 --		table sortType:optional					Table or function returning a table with the initial sortKeys availabe. See example table ZO_ComboBox's ZO_SORT_BY_NAME
 --		boolean sortOrder:optional				Boolean or function returning a boolean for the initial sort order. See example boolean ZO_ComboBox's ZO_SORT_ORDER_UP or ZO_SORT_ORDER_DOWN
+--		boolean enableManualOrder:optional		True to reorder stock normal rows in the root menu by drag or arrows. Disables automatic sorting for that menu; unavailable during text filtering.
+--		function onOrderChanged:optional		Called after a move: function(comboBox, orderedItems, movedItem, fromIndex, toIndex). orderedItems is a shallow copy; indices include all rows.
 
 -- 		string font:optional				 	String or function returning a string: font to use for the dropdown entries
 -- 		number spacing:optional		 			Number or function returning a number: Spacing between the entries
@@ -614,6 +616,7 @@ end
 --You can pass in any other variable with the same table. The whole table will passed to the callback function's signature, and to the uniqueAddonName generating function.
 -- The signature of the table must follow this example:
 --  { addonName = string or function returning a string "UniqueString", onShowCallback = function(comboBox, openingControl, specialData) end, onHideCallback = function(comboBox, openingControl, specialData) end, anyOtherVariableToPassInToTheCallback=anyValue, ... }
+--options may also contain enableManualOrder and onOrderChanged (see AddCustomScrollableComboBoxDropdownMenu).
 --Existing context menu entries will be kept (until ClearCustomScrollableMenu will be called)
 function ShowCustomScrollableMenu(controlToAnchorTo, options, specialCallbackData) --#2025_45
 	updateContextMenuRef()

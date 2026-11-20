@@ -6,7 +6,10 @@ local strings = {
     SI_LSM_CNTXT_CHECK_NONE = "Check none",
     SI_LSM_CNTXT_CHECK_INVERT = "Invert",
 
-    SI_LSM_SLIDER_CURRENT_MIN_MAX_STEP = "Current: %q (Min.: %s/Max.: %s, step: %s)"
+    SI_LSM_SLIDER_CURRENT_MIN_MAX_STEP = "Current: %q (Min.: %s/Max.: %s, step: %s)",
+    SI_LSM_MANUAL_ORDER_DRAG = "Drag to reorder",
+    SI_LSM_MANUAL_ORDER_UP = "Move up (Shift: move to the top of this group)",
+    SI_LSM_MANUAL_ORDER_DOWN = "Move down (Shift: move to the bottom of this group)"
 }
 
 for stringId, stringValue in pairs(strings) do
