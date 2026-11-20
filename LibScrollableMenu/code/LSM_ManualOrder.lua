@@ -30,8 +30,9 @@ function manualOrder.GetWidth(comboBox, item)
 end
 
 -- Header/divider/special/disabled rows delimit contiguous groups. Reject ambiguous item references.
-local function getBounds(items, item)
-	if not isMovable(item) then return end
+function manualOrder.GetBounds(items, item, movable)
+	movable = movable or isMovable
+	if not movable(item) then return end
 	local index
 	for i, candidate in ipairs(items) do
 		if candidate == item then
@@ -42,32 +43,37 @@ local function getBounds(items, item)
 	if not index then return end
 
 	local first, last = index, index
-	while first > 1 and isMovable(items[first - 1]) do first = first - 1 end
-	while last < #items and isMovable(items[last + 1]) do last = last + 1 end
+	while first > 1 and movable(items[first - 1]) do first = first - 1 end
+	while last < #items and movable(items[last + 1]) do last = last + 1 end
 	return index, first, last
 end
 
-local function moveAt(items, fromIndex, toIndex)
+function manualOrder.MoveAt(items, fromIndex, toIndex)
 	table.insert(items, toIndex, table.remove(items, fromIndex))
 end
 
-local function move(dropdown, item, target, direction, toEnd)
-	local comboBox = dropdown.owner
-	if not comboBox:IsDropdownVisible() or not canReorder(comboBox) then return end
-
-	local items = comboBox.m_sortedItems
-	local fromIndex, first, last = getBounds(items, item)
+function manualOrder.FindMove(items, item, target, direction, toEnd, movable)
+	local fromIndex, first, last = manualOrder.GetBounds(items, item, movable)
 	if not fromIndex then return end
 
 	local toIndex
 	if target then
-		toIndex = getBounds(items, target)
+		toIndex = manualOrder.GetBounds(items, target, movable)
 	elseif direction == -1 then
 		toIndex = toEnd and first or fromIndex - 1
 	elseif direction == 1 then
 		toIndex = toEnd and last or fromIndex + 1
 	end
 	if not toIndex or toIndex < first or toIndex > last or toIndex == fromIndex then return end
+	return fromIndex, toIndex
+end
+
+local function move(dropdown, item, target, direction, toEnd)
+	local comboBox = dropdown.owner
+	if not comboBox:IsDropdownVisible() or not canReorder(comboBox) then return end
+	local items = comboBox.m_sortedItems
+	local fromIndex, toIndex = manualOrder.FindMove(items, item, target, direction, toEnd)
+	if not fromIndex then return end
 
 	-- Context menus are rebuilt from GetEntries(); regular combo boxes keep m_sortedItems.
 	if comboBox.isContextMenu then
@@ -76,9 +82,9 @@ local function move(dropdown, item, target, direction, toEnd)
 		for index, entry in ipairs(entries) do
 			if items[index] ~= entry then return end
 		end
-		if entries ~= items then moveAt(entries, fromIndex, toIndex) end
+		if entries ~= items then manualOrder.MoveAt(entries, fromIndex, toIndex) end
 	end
-	moveAt(items, fromIndex, toIndex)
+	manualOrder.MoveAt(items, fromIndex, toIndex)
 
 	local callback = comboBox:GetOptions().onOrderChanged
 	local orderedItems
@@ -123,15 +129,53 @@ local function getDropTarget(dropdown)
 	end
 end
 
-function manualOrder.IsDragging(dropdown)
-	return activeDrag ~= nil and (dropdown == nil or activeDrag.dropdown == dropdown)
+function manualOrder.IsDragging(surface)
+	return activeDrag ~= nil and (surface == nil or activeDrag.surface == surface)
 end
 
-function manualOrder.CancelDrag(dropdown)
-	if not manualOrder.IsDragging(dropdown) then return end
+function manualOrder.CancelDrag(surface)
+	if not manualOrder.IsDragging(surface) then return end
+	local drag = activeDrag
 	activeDrag = nil
 	EVENT_MANAGER:UnregisterForEvent(dragNamespace, EVENT_GLOBAL_MOUSE_UP)
 	EVENT_MANAGER:UnregisterForUpdate(dragNamespace)
+	if drag.onEnd then drag.onEnd() end
+end
+
+-- Both popup rows and the OrderListBox use the same drag lifecycle.
+function manualOrder.BeginDrag(surface, list, rowHeight, isActive, getTarget, onDrop, onEnd)
+	manualOrder.CancelDrag()
+	local drag = { surface = surface, onEnd = onEnd }
+	activeDrag = drag
+	ZO_Tooltips_HideTextTooltip()
+
+	EVENT_MANAGER:RegisterForUpdate(dragNamespace, 75, function()
+		if not isActive() then
+			manualOrder.CancelDrag(surface)
+			return
+		end
+		if not MouseIsOver(list) then return end
+		local _, y = GetUIMousePosition()
+		local edge = math.min(20, list:GetHeight() / 3)
+		if y < list:GetTop() + edge then
+			ZO_ScrollList_ScrollRelative(list, -rowHeight, nil, true)
+		elseif y > list:GetBottom() - edge then
+			ZO_ScrollList_ScrollRelative(list, rowHeight, nil, true)
+		end
+	end)
+
+	EVENT_MANAGER:RegisterForEvent(dragNamespace, EVENT_GLOBAL_MOUSE_UP, function(_, button)
+		if button ~= MOUSE_BUTTON_INDEX_LEFT then return end
+		EVENT_MANAGER:UnregisterForEvent(dragNamespace, EVENT_GLOBAL_MOUSE_UP)
+		EVENT_MANAGER:UnregisterForUpdate(dragNamespace)
+		local target = getTarget()
+		-- Keep the drag guard alive until this mouse-up has finished dispatching to menu rows.
+		zo_callLater(function()
+			if activeDrag ~= drag then return end
+			manualOrder.CancelDrag(surface)
+			if target and isActive() then onDrop(target) end
+		end, 0)
+	end)
 end
 
 function manualOrder.StartDrag(grip, mouseButton)
@@ -142,42 +186,12 @@ function manualOrder.StartDrag(grip, mouseButton)
 	if not comboBox or not comboBox:IsDropdownVisible() or not canReorder(comboBox) then return end
 
 	local item = getControlData(row)
-	local index, first, last = getBounds(comboBox.m_sortedItems, item)
+	local index, first, last = manualOrder.GetBounds(comboBox.m_sortedItems, item)
 	if not index or first == last then return end
-	if activeDrag then manualOrder.CancelDrag(activeDrag.dropdown) end
-
-	local drag = { dropdown = dropdown }
-	activeDrag = drag
-	ZO_Tooltips_HideTextTooltip()
-
-	EVENT_MANAGER:RegisterForUpdate(dragNamespace, 75, function()
-		if not comboBox:IsDropdownVisible() or not canReorder(comboBox) then
-			manualOrder.CancelDrag(dropdown)
-			return
-		end
-		local list = dropdown.scrollControl
-		if not MouseIsOver(list) then return end
-		local _, y = GetUIMousePosition()
-		local edge = math.min(20, list:GetHeight() / 3)
-		if y < list:GetTop() + edge then
-			ZO_ScrollList_ScrollRelative(list, -ZO_COMBO_BOX_ENTRY_TEMPLATE_HEIGHT, nil, true)
-		elseif y > list:GetBottom() - edge then
-			ZO_ScrollList_ScrollRelative(list, ZO_COMBO_BOX_ENTRY_TEMPLATE_HEIGHT, nil, true)
-		end
-	end)
-
-	EVENT_MANAGER:RegisterForEvent(dragNamespace, EVENT_GLOBAL_MOUSE_UP, function(_, button)
-		if button ~= MOUSE_BUTTON_INDEX_LEFT then return end
-		EVENT_MANAGER:UnregisterForEvent(dragNamespace, EVENT_GLOBAL_MOUSE_UP)
-		EVENT_MANAGER:UnregisterForUpdate(dragNamespace)
-		local target = getDropTarget(dropdown)
-		-- Keep the drag guard alive until this mouse-up has finished dispatching to menu rows.
-		zo_callLater(function()
-			if activeDrag ~= drag then return end
-			manualOrder.CancelDrag(dropdown)
-			if target then move(dropdown, item, target) end
-		end, 0)
-	end)
+	manualOrder.BeginDrag(dropdown, dropdown.scrollControl, ZO_COMBO_BOX_ENTRY_TEMPLATE_HEIGHT,
+		function() return comboBox:IsDropdownVisible() and canReorder(comboBox) end,
+		function() return getDropTarget(dropdown) end,
+		function(target) move(dropdown, item, target) end)
 end
 
 function manualOrder.SetupRow(comboBox, row)
@@ -200,7 +214,7 @@ function manualOrder.SetupRow(comboBox, row)
 	controls:SetHidden(width == 0)
 	if width == 0 then return end
 
-	local index, first, last = getBounds(comboBox.m_sortedItems, item)
+	local index, first, last = manualOrder.GetBounds(comboBox.m_sortedItems, item)
 	local up, down = controls:GetNamedChild("Up"), controls:GetNamedChild("Down")
 	local grip = controls:GetNamedChild("Grip")
 	local canMoveUp, canMoveDown = index ~= nil and index > first, index ~= nil and index < last

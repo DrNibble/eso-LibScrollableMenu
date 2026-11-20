@@ -47,6 +47,11 @@ local defaultHighlightData = entryTypeConstants.defaults.highlights
 
 local libUtil = lib.Util
 
+-- Match the same literal, case-insensitive text in menus and hosted lists.
+function libUtil.matchesFilterText(text, lowerQuery)
+	return zo_strlower(text):find(lowerQuery, 1, true) ~= nil
+end
+
 
 -----------------------------------------------------------------------
 -- Library local utility variables

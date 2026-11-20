@@ -229,6 +229,12 @@ function AddCustomScrollableComboBoxDropdownMenu(parent, comboBoxContainer, opti
 	return comboBox.m_dropdownObject
 end
 
+-- Scroll-list widget using the OrderListBox layout, not a combo box window.
+-- Use a named host with a width and call list:SetItems(entries), :Show() and :Hide().
+function lib.CreateOrderListBox(host, options)
+	return lib.OrderListBox.Create(host, options)
+end
+
 -- A persistent root list, anchored to a named host and managed by its window.
 -- Unlike a popup, it never registers the global outside-click handler.
 function lib.CreateEmbeddedList(host, options)

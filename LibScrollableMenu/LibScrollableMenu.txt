@@ -5,8 +5,8 @@
 
 ## Title: LibScrollableMenu
 ## Description: Adds scrollable menu&nested submenus functionality to combobox. Originally developed by Kyoma's Titlizer
-## Version: 2.49
-## AddOnVersion: 020409
+## Version: 2.50
+## AddOnVersion: 020500
 ## IsLibrary: true
 ## Author: IsJustaGhost, Baertram, tomstock (, Kyoma)
 ## APIVersion: 101051 101052
@@ -26,6 +26,7 @@ debug/LSM_debug.lua
 ; Utility functions
 code/LSM_Util.lua
 code/LSM_ManualOrder.lua
+code/LSM_OrderListBox.lua
 
 ; Classes for special entry types
 classes/colorPicker_class.lua
@@ -35,7 +36,7 @@ classes/dropdown_class.lua
 classes/buttonGroup_class.lua
 classes/comboBox_base.lua
 classes/comboBox_class.lua
-classes/submenu_class.lua
+classes/subMenu_class.lua
 classes/contextMenu_class.lua
 
 ; LSM code and functions
@@ -43,6 +44,7 @@ code/LibScrollableMenu.lua
 
 ; LSM XML UI and virtual templates (row, selection, dropdowns, combobox, header, ...)
 XML/LibScrollableMenu.xml
+XML/LSM_OrderListBox.xml
 
 ## API functions of this library
 LSM_API.lua

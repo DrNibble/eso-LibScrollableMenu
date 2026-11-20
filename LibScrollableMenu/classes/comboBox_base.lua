@@ -32,7 +32,6 @@ local ZO_COMBO_BOX_ENTRY_TEMPLATE_HEIGHT = ZO_COMBO_BOX_ENTRY_TEMPLATE_HEIGHT
 local SNM = SCREEN_NARRATION_MANAGER
 local tos = tostring
 local strfor = string.format
-local zostrlow = zo_strlower
 local tins = table.insert
 
 local funcType 		= "function"
@@ -139,9 +138,7 @@ local clearCustomScrollableMenu
 --return value needs to be a boolean: true = found/false = not found
 -->Attention: prefix "/" in the filterString still jumps this function for submenus as non-matching will be always found that way!
 local function defaultFilterFunc(p_item, p_filterString)
-	local name = p_item.label or p_item.name
-	local filterStringClean = p_filterString:gsub("([^%w])", "%%%1")  --#2026_07 string pattern error if search text contains a (, e.g. d(
-	return zostrlow(name):find(filterStringClean) ~= nil
+	return libUtil.matchesFilterText(p_item.label or p_item.name, p_filterString)
 end
 
 

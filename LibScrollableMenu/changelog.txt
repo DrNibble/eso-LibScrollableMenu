@@ -1,3 +1,10 @@
+-v- ---------------LSM v2.50 (development) - 2026-11-20----------------------------------------------------------- -v--
+[Added]
+--CreateOrderListBox: a native, persistent scroll list using the OrderListBox appearance with shared manual ordering controls and optional LSM text filtering, independent of LibAddonMenu.
+[Fixed]
+--Corrected the path case for subMenu_class.lua in the manifest.
+
+
 -v- ---------------LSM v2.49 (development) - 2026-11-20----------------------------------------------------------- -v--
 [Added]
 --Opt-in manual ordering of standard rows in root dropdowns and context menus, with drag-and-drop, move arrows and an onOrderChanged callback.

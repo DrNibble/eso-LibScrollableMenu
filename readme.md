@@ -502,6 +502,16 @@ Set `additionalData.enableSubmenuFilter = true` on a submenu entry to give it it
 
 `LibScrollableMenu.CreateEmbeddedList(host, options)` creates a persistent list anchored to a named keyboard-UI control. Use `list:SetItems(entries)` with ordinary LSM entry data in display order, then call `list:Show()` when the containing window is shown. Clicking outside or clicking a row does not dismiss it. `list:Hide()` or hiding the host clears the search and stops any drag. Use `enableFilter` for the native search or `enableManualOrder` and `onOrderChanged` for reordering.
 
+### OrderListBox widget (2.50)
+
+`LibScrollableMenu.CreateOrderListBox(host, options)` creates a native `ZO_ScrollList` as a child of a named keyboard UI control. Give the host a width, reserve `visibleRows * rowHeight + 10` pixels vertically, and add 41 pixels if `enableFilter` is set. `visibleRows` defaults to 15 and `rowHeight` to 25. The widget has its own scrollbar and selection, and is not dismissed by clicking outside it.
+
+Call `list:SetItems(entries)` with entries already in display order. Each entry has a string `name` and an optional `label` (display/filter text), stable unique `key` (to preserve selection across `SetItems`), `tooltip`, `enabled`, `callback(list, name, entry, row)`, and `rightClickCallback(list, row, entry)`. Call `list:Show()` after showing the enclosing window, and `list:Hide()` to clear selection and search. The list does not modify the caller's array or write to saved variables.
+
+Set `enableFilter = true` for the local LSM search field. Set `enableManualOrder = true` for the four side buttons and drag-to-reorder. Reordering is disabled when a search is active; disabled entries delimit groups. On a real move, `onOrderChanged(list, orderedEntries, movedEntry, fromIndex, toIndex)` receives the updated order and can rebuild the rows with `SetItems`.
+
+The presentation is based on [LibAddonMenuOrderListBox](https://github.com/DrNibble/LibAddonMenuOrderListBox). The renamed LSM widget is independent of LAM, uses LSM's filter matching and manual order code, and does not provide LAM settings registration, configuration callbacks or custom-entry dialogs. The original widget and LSM widget can coexist. See [Artistic License 2.0 and copyright notice](LibScrollableMenu/LICENSE-OrderListBox.txt).
+
 ### Callbacks fired by the library where you can register via LibScrollableMenu:RegisterForCallback(callbackName, func) to
 ```
 -callbackName-          -functionParameters-   -Description-
